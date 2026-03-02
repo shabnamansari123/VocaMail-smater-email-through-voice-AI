@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VocaMail - Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #020617; color: white; min-height: 100vh; overflow-x: hidden; }
+
+    .navbar { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 15px 20px; background: #0f172a; border-bottom: 1px solid #1e293b;
+    }
+    .nav-left { display: flex; align-items: center; gap: 20px; }
+    .nav-left i { font-size: 20px; cursor: pointer; color: #94a3b8; }
+    
+    .search-box { display: none; background: #1e293b; border-radius: 8px; padding: 5px 15px; margin-left: 10px; }
+    .search-box input { background: transparent; border: none; color: white; outline: none; padding: 5px; }
+
+    .nav-right .avatar { 
+      width: 35px; height: 35px; background: #0891b2; border-radius: 50%; 
+      display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
+      cursor: pointer;
+    }
+
+    .main-content { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; padding: 20px; }
+    .mic-icon-large { width: 120px; height: 120px; background: rgba(34, 211, 238, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid #22d3ee; box-shadow: 0 0 20px rgba(34, 211, 238, 0.2); cursor: pointer; }
+    .mic-icon-large i { font-size: 40px; color: #22d3ee; }
+    
+    .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: #0f172a; z-index: 2000; transition: 0.3s ease; padding: 20px; border-right: 1px solid #1e293b; }
+    .sidebar.active { left: 0; }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; color: #22d3ee; margin-bottom: 25px; }
+    .compose-btn { background: #22d3ee; color: #020617; border: none; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 25px; cursor: pointer; width: 100%; }
+    .user-card-sidebar { background: #1e293b; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; cursor: pointer; }
+    .menu-links a { display: flex; align-items: center; gap: 12px; padding: 12px; color: #94a3b8; text-decoration: none; border-radius: 10px; margin-bottom: 5px; }
+    .menu-links a.active, .menu-links a:hover { background: rgba(34, 211, 238, 0.1); color: #22d3ee; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 1500; }
+    .sidebar-overlay.active { display: block; }
+    .float-mic { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #22d3ee; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #020617; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(34, 211, 238, 0.4); }
+    
+    /* Dropdown Animation */
+    .action-dropdown { animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div style="display:flex; align-items:center; gap:10px; font-weight:bold;"><i class="fas fa-microphone"></i> VocaMail</div>
+      <i class="fas fa-times" id="close-btn" style="cursor:pointer;"></i>
+    </div>
+    <button class="compose-btn" onclick="location.href='mic.html'"><i class="fas fa-plus"></i> Compose Email</button>
+    <div class="user-card-sidebar" onclick="showUserProfile()">
+      <div class="avatar" id="sidebar-avatar" style="width:35px; height:35px; background:#0891b2; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">--</div>
+      <div style="font-size:12px;">
+        <strong id="display-name" style="display:block;">Loading...</strong>
+        <span id="display-email" style="color:#64748b;">Loading...</span>
+      </div>
+    </div>
+    <nav class="menu-links">
+      <a href="dashboard.html" class="active"><i class="fas fa-inbox"></i> Inbox</a>
+      <a href="sent.html"><i class="fas fa-paper-plane"></i> Sent</a>
+      <a href="draft.html"><i class="fas fa-file-alt"></i> Drafts</a>
+      <a href="setting.html"><i class="fas fa-cog"></i> Settings</a>
+      <a href="index.html" onclick="logout()" style="color:#f87171;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </nav>
+  </div>
+
+  <div id="overlay" class="sidebar-overlay"></div>
+
+  <header class="navbar">
+    <div class="nav-left">
+      <i class="fas fa-bars" id="burger-menu"></i>
+      <i class="fas fa-search" id="search-trigger" style="margin-left: 15px;"></i>
+      <div class="search-box" id="search-box"><input type="text" placeholder="Search emails..."></div>
+    </div>
+    <div style="font-weight:600; font-size:18px;">Inbox</div>
+    <div class="nav-right">
+        <div class="avatar" id="nav-avatar" onclick="showUserProfile()" style="width:35px; height:35px; background:#0891b2; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer;">--</div>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-container">
+    <div class="mic-icon-large" onclick="location.href='mic.html'"><i class="fas fa-microphone"></i></div>
+    <h1 id="welcome-msg">No Emails Yet</h1>
+    <p>Start by sending your first voice email. Tap the mic button below!</p>
+  </main>
+
+  <div class="float-mic" onclick="location.href='mic.html'"><i class="fas fa-microphone"></i></div>
+
+ <script>
+    window.onload = function() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = "index.html";
+            return;
+        }
+        document.getElementById('display-name').innerText = currentUser.name;
+        document.getElementById('display-email').innerText = currentUser.email;
+        const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('sidebar-avatar').innerText = initials;
+        document.getElementById('nav-avatar').innerText = initials;
+        renderEmails();
+    };
+
+    function renderEmails() {
+        const mainContainer = document.getElementById('main-container');
+        const allEmails = JSON.parse(localStorage.getItem('allEmails')) || [];
+        // FILTER: Jo draft ya trash nahi hain wahi inbox mein dikhenge
+        const inboxEmails = allEmails.filter(email => email.status !== 'draft' && email.status !== 'trash');
+
+        if (inboxEmails.length > 0) {
+            mainContainer.innerHTML = ""; 
+            mainContainer.style.justifyContent = "flex-start";
+            mainContainer.style.height = "auto";
+            mainContainer.style.paddingTop = "20px";
+
+            inboxEmails.forEach(email => {
+                const card = document.createElement('div');
+                card.style.cssText = `background: #0f172a; border: 1px solid #1e293b; width: 100%; max-width: 800px; padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; position: relative;`;
+                card.innerHTML = `
+                    <div style="text-align: left; flex: 1;">
+                        <div style="color: #22d3ee; font-weight: bold; font-size: 13px;">To: ${email.receiver}</div>
+                        <div style="font-size: 16px; margin: 4px 0; color: white;">${email.subject}</div>
+                        <div style="color: #64748b; font-size: 13px;">${email.message.substring(0, 50)}...</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="color: #64748b; font-size: 12px;">${email.time}</div>
+                        <div style="position: relative;">
+                            <i class="fas fa-ellipsis-v" onclick="toggleActionMenu(event, ${email.id})" style="cursor: pointer; color: #94a3b8; padding: 5px;"></i>
+                            <div id="menu-${email.id}" class="action-dropdown" style="display: none; position: absolute; right: 0; top: 25px; 
+                            background: #1e293b; border: 1px solid #334155; border-radius: 8px; z-index: 100; min-width: 120px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                                <div onclick="replyEmail(${email.id}, '${email.receiver}', '${email.subject}', \`${email.message}\`)" 
+                                style="padding: 10px; color: #22d3ee; cursor: pointer; border-bottom: 1px solid #334155; font-size: 14px;">
+                                 <i class="fas fa-reply"></i> Reply</div>
+                                <div onclick="deleteEmail(${email.id})" style="padding: 10px; color: #f87171; cursor: pointer; font-size: 14px;">
+                                    <i class="fas fa-trash"></i> Delete
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                mainContainer.appendChild(card);
+            });
+        } else {
+            mainContainer.innerHTML = `<div class="mic-icon-large" onclick="location.href='mic.html'"><i class="fas fa-microphone"></i></div><h1>No Emails Yet</h1><p>Start by sending your first voice email.</p>`;
+        }
+    }
+
+    function deleteEmail(id) {
+        let allEmails = JSON.parse(localStorage.getItem('allEmails')) || [];
+        allEmails = allEmails.map(email => {
+            if(email.id === id) email.status = 'draft'; 
+            return email;
+        });
+        localStorage.setItem('allEmails', JSON.stringify(allEmails));
+        alert("Moved to Drafts!");
+        renderEmails();
+    }
+
+    function toggleActionMenu(event, id) {
+        event.stopPropagation();
+        document.querySelectorAll('.action-dropdown').forEach(el => {
+            if(el.id !== 'menu-' + id) el.style.display = 'none';
+        });
+        const menu = document.getElementById('menu-' + id);
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Dashboard.html ke script mein ye update karein
+function replyEmail(id, receiver, subject, message) {
+    const replyData = {
+        id: id,
+        to: receiver,
+        subject: "Re: " + subject,
+        message: message // Ye line important hai content dikhane ke liye
+    };
+    localStorage.setItem('replyToData', JSON.stringify(replyData));
+    window.location.href = 'replay.html';
+    
+
+}
+
+// Aur jahan loop chal raha hai renderEmails mein, wahan onclick aise update karein:
+// onclick="replyEmail(${email.id}, '${email.receiver}', '${email.subject}', '${email.message}')"
+
+    window.onclick = () => document.querySelectorAll('.action-dropdown').forEach(el => el.style.display = 'none');
+    
+    const burger = document.getElementById('burger-menu'), sidebar = document.getElementById('sidebar'), overlay = document.getElementById('overlay'), closeBtn = document.getElementById('close-btn');
+    burger.onclick = () => { sidebar.classList.add('active'); overlay.classList.add('active'); };
+    const hideSidebar = () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); };
+    closeBtn.onclick = hideSidebar; overlay.onclick = hideSidebar;
+
+    document.getElementById('search-trigger').onclick = () => {
+        const sb = document.getElementById('search-box');
+        sb.style.display = (sb.style.display === 'block') ? 'none' : 'block';
+    };
+
+    function showUserProfile() {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        alert(`Account Details:\nName: ${user.name}\nEmail: ${user.email}`);
+    }
+
+    function logout() {
+        localStorage.removeItem('currentUser');
+        window.location.href = "index.html";
+    }
+</script>

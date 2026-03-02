@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VocaMail - Sign Up</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <div class="main-wrapper">
+        <div class="header">
+            <div class="logo-box">
+                <img src="logo.png" alt="Logo">
+            </div>
+            <h1>VocaMail</h1>
+            <p>Create your account</p>
+        </div>
+
+        <div class="login-card">
+            <h2>Sign Up</h2>
+            <form id="signupForm"> 
+                <div class="input-group">
+                    <label>FULL NAME</label>
+                    <input type="text" id="fullName" placeholder="Ansari" required>
+                </div>
+                <div class="input-group">
+                    <label>EMAIL</label>
+                    <input type="email" id="email" placeholder="ansarifarzana730@gmail.com" required>
+                </div>
+                <div class="input-group">
+                    <label>PASSWORD</label>
+                    <input type="password" id="password" placeholder="••••••" required>
+                </div>
+                <div class="input-group">
+                    <label>CONFIRM PASSWORD</label>
+                    <input type="password" id="confirmPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="sign-in-btn">Create Account</button>
+            </form>
+            <p class="footer-text">Already have an account? <a href="index.html">Sign In</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Page reload hone se rokne ke liye
+
+            const name = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            // 1. Password Check
+            if (pass !== confirmPass) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            // 2. Pehle se saved users ko nikalna
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+
+            // 3. Check karna ki email pehle se register toh nahi
+            const userExists = users.find(u => u.email === email);
+            if (userExists) {
+                alert("This email is already registered. Please Sign In.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            // 4. Naya user save karna
+            const newUser = {
+                name: name,
+                email: email,
+                password: pass
+            };
+
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            alert("Account Created Successfully! Now please Login.");
+            
+            // Redirect to Login Page
+            window.location.href = "index.html"; 
+        });
+    </script>
+</body>
+</html>

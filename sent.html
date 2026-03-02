@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sent - VocaMail</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Search Box styling (Interface change nahi karega, bas functionality add karega) */
+        .search-container {
+            display: none;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 5px 12px;
+            margin-left: 10px;
+        }
+        .search-container input {
+            background: transparent; border: none; color: white; outline: none; width: 150px;
+        }
+        .nav-left { display: flex; align-items: center; }
+        .avatar, .user-card-sidebar { cursor: pointer; }
+    </style>
+</head>
+
+<body>
+
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <i class="fas fa-microphone"></i>
+            <span>VocaMail</span>
+        </div>
+        <i class="fas fa-times" id="close-btn" style="cursor:pointer;"></i>
+    </div>
+
+    <button class="compose-btn" onclick="location.href='mic.html'">
+        <i class="fas fa-pencil-alt"></i> Compose Email
+    </button>
+
+    <div class="user-card-sidebar" onclick="showUserProfile()">
+        <div class="avatar-sidebar" id="side-avatar">AS</div>
+        <div class="user-info-sidebar">
+            <strong id="side-name">Loading...</strong>
+            <span id="side-email">Loading...</span>
+        </div>
+    </div>
+
+    <nav class="menu-links">
+        <a href="dashboard.html"><i class="fas fa-inbox"></i> Inbox</a>
+        <a href="sent.html" class="active"><i class="fas fa-paper-plane"></i> Sent</a>
+        <a href="draft.html"><i class="fas fa-file-alt"></i> Drafts</a>
+        <div class="menu-divider"></div>
+        <a href="setting.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" onclick="logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </nav>
+</div>
+
+<div id="overlay" class="sidebar-overlay"></div>
+
+<header class="navbar">
+    <div class="nav-left">
+        <i class="fas fa-bars" id="burger-menu" style="cursor:pointer;"></i>
+        <i class="fas fa-search" id="search-icon" style="cursor:pointer; margin-left: 20px;"></i>
+        <div class="search-container" id="search-box">
+            <input type="text" placeholder="Search sent emails...">
+        </div>
+    </div>
+
+    <div class="nav-title" style="font-weight: 600; font-size: 18px;">
+        Sent
+    </div>
+
+    <div class="nav-right">
+        <div class="avatar" id="top-avatar" onclick="showUserProfile()">AS</div>
+    </div>
+</header>
+
+<main class="main-content">
+    <div class="center-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; text-align: center;">
+        <div class="mic-glow" onclick="location.href='mic.html'" style="width: 120px; height: 120px; background: rgba(34, 211, 238, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid #22d3ee; cursor: pointer;">
+            <i class="fas fa-microphone" style="font-size: 40px; color: #22d3ee;"></i>
+        </div>
+
+        <h1>No Sent Emails</h1>
+        <p style="color: #64748b; max-width: 300px; margin: 0 auto;">
+            You haven't sent any voice emails yet. 
+            Your sent history will appear here.
+        </p>
+    </div>
+</main>
+
+<button class="floating-mic" onclick="location.href='mic.html'">
+    <i class="fas fa-microphone"></i>
+</button>
+
+<script>
+    // 1. Sidebar Control
+    const burger = document.getElementById('burger-menu');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('close-btn');
+
+    burger.onclick = () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    };
+
+    const hideSidebar = () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    };
+
+    closeBtn.onclick = hideSidebar;
+    overlay.onclick = hideSidebar;
+
+// sent.html ki script mein window.onload ke andar ye function call karein
+
+window.onload = function() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user) {
+        document.getElementById('side-name').innerText = user.name;
+        document.getElementById('side-email').innerText = user.email;
+        const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('side-avatar').innerText = initials;
+        document.getElementById('top-avatar').innerText = initials;
+        
+        renderSentEmails(); // Function to show emails
+    } else {
+        window.location.href = "index.html";
+    }
+};
+
+function renderSentEmails() {
+    const mainContent = document.querySelector('.main-content');
+    const allEmails = JSON.parse(localStorage.getItem('allEmails')) || [];
+    const sentEmails = allEmails.filter(email => email.status === 'sent' || !email.status);
+
+    if (sentEmails.length > 0) {
+        mainContent.innerHTML = "";
+        mainContent.style.display = "block";
+        mainContent.style.padding = "20px";
+
+        sentEmails.forEach(email => {
+            const card = document.createElement('div');
+            card.style.cssText = `background: #0f172a; border: 1px solid #1e293b; padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;`;
+            card.innerHTML = `<div><div style="color: #22d3ee; font-weight: bold; font-size: 13px;">To: ${email.receiver}</div><div style="font-size: 16px; margin: 4px 0; color: white;">${email.subject}</div><div style="color: #64748b; font-size: 13px;">${email.message.substring(0, 50)}...</div></div><div style="color: #64748b; font-size: 12px;">${email.time}</div>`;
+            mainContent.appendChild(card);
+        });
+    }
+}
+
+    // 3. Search Bar Toggle
+    const searchIcon = document.getElementById('search-icon');
+    const searchBox = document.getElementById('search-box');
+    searchIcon.onclick = () => {
+        searchBox.style.display = (searchBox.style.display === 'block') ? 'none' : 'block';
+        if(searchBox.style.display === 'block') searchBox.querySelector('input').focus();
+    };
+
+    // 4. User Profile Details
+    function showUserProfile() {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        alert(`User Profile:\nName: ${user.name}\nEmail: ${user.email}`);
+    }
+
+    // 5. Logout
+    function logout() {
+        localStorage.removeItem('currentUser');
+        window.location.href = "index.html";
+    }
+</script>
+
+</body>
+</html>

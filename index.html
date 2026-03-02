@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VocaMail - Sign In</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+    <div class="main-wrapper">
+        <div class="header">
+            <div class="logo-box">
+                <img src="logo.png" alt="Logo"> </div>
+            <h1>VocaMail</h1>
+            <p>Smarter Email Through Voice & AI</p>
+        </div>
+
+        <div class="login-card">
+            <h2>Sign In</h2>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>EMAIL</label>
+                    <input type="email" id="loginEmail" placeholder="demo@vocamail.ai" required>
+                </div>
+
+                <div class="input-group">
+                    <label>PASSWORD</label>
+                    <input type="password" id="loginPassword" placeholder="••••••" required>
+                </div>
+
+                <button type="submit" class="sign-in-btn">Sign In</button>
+            </form>
+
+            <p class="footer-text">Don't have an account? <a href="signup.html">Sign Up</a></p>
+        </div>
+        
+        <p class="demo-info">Demo: demo@vocamail.ai / demo123</p>
+    </div>
+
+    <div id="splash">
+        <div class="logo-box">
+            <img src="logo.png" alt="Logo">
+        </div>
+        <h1>VocaMail</h1>
+        <div class="loader"></div>
+    </div>
+
+    <script>
+        // Splash screen logic (aapka original)
+        setTimeout(function() {
+            document.getElementById('splash').style.display = 'none';
+        }, 3000);
+
+        // Login Logic
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+
+            // 1. LocalStorage se users ki list nikalna
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+
+            // 2. Demo User handle karna (agar kisi ne signup nahi kiya tab bhi ye kaam karega)
+            if (email === "demo@vocamail.ai" && pass === "demo123") {
+                const demoUser = { name: "Demo User", email: email };
+                localStorage.setItem('currentUser', JSON.stringify(demoUser));
+                window.location.href = "dashboard.html"; // Aapke dashboard ka sahi naam yahan likhein
+                return;
+            }
+
+            // 3. User ko verify karna
+            const user = users.find(u => u.email === email && u.password === pass);
+
+            if (user) {
+                // Login successful - User session save karna
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                alert("Welcome back, " + user.name + "!");
+                window.location.href = "dashboard.html"; // Redirect to Inbox/Dashboard
+            } else {
+                // Galat details
+                alert("Invalid Email or Password! Please try again or Sign Up.");
+            }
+        });
+    </script>
+</body>
+</html>
